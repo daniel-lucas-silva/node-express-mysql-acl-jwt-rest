@@ -1,4 +1,3 @@
-import { config } from "dotenv-safe";
 import express from "express";
 import bodyParser from "body-parser";
 import morgan from "morgan";
@@ -11,12 +10,7 @@ import passport from "passport";
 import routes from "./routes";
 import database from "./config/database";
 
-// DotEnv
-config();
-
 const app = express();
-
-app.set("port", process.env.PORT || 3000);
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
@@ -50,7 +44,7 @@ database
   .sync()
   .then(result => {
     // console.log(result);
-    app.listen(app.get("port"));
+    app.listen(3000);
   })
   .catch(err => {
     console.log(err);

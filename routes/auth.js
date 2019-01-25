@@ -1,18 +1,17 @@
-import { buildErrObject, handleError } from '../config/utils';
-import User from '../models/user';
+import { buildErrObject, handleError } from "../functions/base";
+import User from "../models/user";
 
 const checkPermissions = async (data, next) => {
   return new Promise((resolve, reject) => {
-
     User.findById(data.id)
       .then(result => {
         if (data.roles.indexOf(result.role) > -1) {
-          return resolve(next())
+          return resolve(next());
         }
-        return reject(buildErrObject(401, 'UNAUTHORIZED'))
+        return reject(buildErrObject(401, "UNAUTHORIZED"));
       })
       .catch(err => {
-        reject(buildErrObject(422, err.message))
+        reject(buildErrObject(422, err.message));
       });
 
     // User.findById(data.id, (err, result) => {
@@ -27,19 +26,18 @@ const checkPermissions = async (data, next) => {
     //   }
     //   return reject(buildErrObject(401, 'UNAUTHORIZED'))
     // })
-  })
+  });
 };
 
 export const roleAuthorization = roles => async (req, res, next) => {
-
   try {
     const data = {
       id: req.user.id,
       roles
     };
-    await checkPermissions(data, next)
+    await checkPermissions(data, next);
   } catch (error) {
-    handleError(res, error)
+    handleError(res, error);
   }
 };
 

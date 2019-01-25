@@ -2,7 +2,6 @@ import uuid from "uuid/v4";
 import Sequelize from "sequelize";
 import database from "../config/database";
 import bcrypt from "bcrypt-nodejs";
-import {} from "../functions/base";
 
 const User = database.define(
   "users",
@@ -81,6 +80,17 @@ User.prototype.comparePassword = function(passwordAttempt, cb) {
   bcrypt.compare(passwordAttempt, this.password, (err, isMatch) =>
     err ? cb(err) : cb(null, isMatch)
   );
+};
+
+User.prototype.toJSON = function() {
+  return {
+    id: this.id,
+    username: this.username,
+    email: this.email,
+    thumbnail: this.thumbnail,
+    info: this.info,
+    role: this.role
+  };
 };
 
 export default User;

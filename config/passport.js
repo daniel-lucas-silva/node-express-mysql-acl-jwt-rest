@@ -1,7 +1,8 @@
+import passport from "passport";
+import { Strategy as JwtStrategy } from "passport-jwt";
+
 import User from "../models/user";
-const passport = require("passport");
-const { decrypt } = require("../functions/base");
-const JwtStrategy = require("passport-jwt").Strategy;
+import { JWT_SECRET } from "./config";
 
 const jwtExtractor = req => {
   let token = null;
@@ -20,7 +21,7 @@ const jwtExtractor = req => {
 
 const jwtOptions = {
   jwtFromRequest: jwtExtractor,
-  secretOrKey: "MyUltraSecurePassWordIWontForgetToChange"
+  secretOrKey: JWT_SECRET
 };
 
 const jwtLogin = new JwtStrategy(jwtOptions, (payload, done) => {

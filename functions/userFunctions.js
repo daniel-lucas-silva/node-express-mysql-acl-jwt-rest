@@ -16,6 +16,7 @@ import {
 import uuid from "uuid";
 import { addHours } from "date-fns";
 import { matchedData } from "express-validator/filter";
+import { JWT_SECRET, JWT_EXPIRATION } from "../config/config";
 
 const HOURS_TO_BLOCK = 2;
 const LOGIN_ATTEMPTS = 5;
@@ -29,8 +30,8 @@ const generateToken = user => {
   //     expiresIn: process.env.JWT_EXPIRATION
   //   })
   // );
-  return jwt.sign(obj, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRATION
+  return jwt.sign(obj, JWT_SECRET, {
+    expiresIn: JWT_EXPIRATION
   });
 };
 

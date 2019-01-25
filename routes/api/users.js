@@ -2,7 +2,6 @@ import auth from "../auth";
 import passport from "passport";
 import "../../config/passport";
 import User from "../../models/user";
-import { buildErrObject, handleError } from "../../config/utils";
 import * as userFn from "../../functions/userFunctions";
 import * as baseFn from "../../functions/base";
 
@@ -23,7 +22,7 @@ router.get(
           return res.sendStatus(404);
         }
 
-        return res.json({ user: user.toAuthJSON() });
+        return res.json({ user: user.toJSON() });
       })
       .catch(next);
   }
@@ -38,7 +37,7 @@ router.post("/login", async (req, res, next) => {
     await userFn.checkLoginAttemptsAndBlockExpires(user);
     const isPasswordMatch = await userFn.checkPassword(password, user);
     if (!isPasswordMatch) {
-      handleError(res, await userFn.passwordsDoNotMatch(user));
+      baseFn.handleError(res, await userFn.passwordsDoNotMatch(user));
     } else {
       // all ok, register access and return token
       user.loginAttempts = 0;
@@ -49,7 +48,7 @@ router.post("/login", async (req, res, next) => {
     }
     // return res.json({ user });
   } catch (error) {
-    handleError(res, error);
+    baseFn.handleError(res, error);
   }
 });
 
@@ -66,7 +65,7 @@ router.post("/register", async (req, res, next) => {
       res.status(201).json(response);
     }
   } catch (error) {
-    handleError(res, error);
+    baseFn.handleError(res, error);
   }
 });
 
