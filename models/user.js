@@ -65,7 +65,7 @@ const User = database.define(
         await bcrypt.genSalt(SALT_FACTOR, function(err, salt) {
           bcrypt.hash(user.password, salt, null, function(err, hash) {
             user.password = hash;
-            Promise.resolve(user);
+            // Promise.resolve(user);
           });
         });
         // const salt = bcrypt.genSalt(SALT_FACTOR);

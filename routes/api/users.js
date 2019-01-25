@@ -69,11 +69,7 @@ router.post("/register", async (req, res, next) => {
   }
 });
 
-router.post("/create", requireAuth, auth(["user", "admin"]), function(
-  req,
-  res,
-  next
-) {
+router.post("/create", requireAuth, auth(["admin"]), function(req, res, next) {
   const { name, username, email, password } = req.body;
 
   return User.create({
