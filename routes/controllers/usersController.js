@@ -1,18 +1,20 @@
-const router = require("express").Router();
-const base = require("../../core/base");
-const users = require("../../core/users");
+const router = require('express').Router();
+const base = require('../../core/base');
+const users = require('../../core/users');
 
 router
-  .get("/", (req, res, next) => {
+  .get('/', (req, res, next) => {
     User.findById(req.payload.id)
       .then(user => {
-        if (!user) return res.sendStatus(401);
+        if (!user) {
+          return res.sendStatus(401);
+        }
 
         return res.json({ user: user.toAuthJSON() });
       })
       .catch(next);
   })
-  .post("/register", async (req, res, next) => {
+  .post('/register', async (req, res, next) => {
     try {
       const { email } = req.body;
       const doesEmailExists = await base.emailExists(email);
@@ -27,16 +29,18 @@ router
       base.handleError(res, error);
     }
   })
-  .get("/:id", (req, res, next) => {
+  .get('/:id', (req, res, next) => {
     User.findById(req.payload.id)
       .then(user => {
-        if (!user) return res.sendStatus(401);
+        if (!user) {
+          return res.sendStatus(401);
+        }
 
         return res.json({ user: user.toAuthJSON() });
       })
       .catch(next);
   })
-  .put("/:id", (req, res, next) => {})
-  .delete("/:id", (req, res, next) => {});
+  .put('/:id', (req, res, next) => {})
+  .delete('/:id', (req, res, next) => {});
 
 module.exports = router;

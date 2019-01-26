@@ -1,22 +1,17 @@
-// import ForgotPassword from "../models/forgotPassword";
+const { addHours } = require('date-fns');
+const { User, UserAccess } = require('../db/models');
+const { jwtSecret, jwtExpiration } = require('../config/app.json');
+const jwt = require('jsonwebtoken');
 const {
-  encrypt,
+  // encrypt,
   getIP,
   getBrowserInfo,
-  getCountry,
-  buildErrObject,
-  handleError,
-  emailExists,
-  sendRegistrationEmailMessage,
-  sendResetPasswordEmailMessage
-} = require("./base");
-// import uuid from "uuid";
-const { addHours } = require("date-fns");
-// import { matchedData } from "express-validator/filter";
-
-const models = require("../db/models");
-const { jwtSecret, jwtExpiration } = require("../config/app.json");
-const jwt = require("jsonwebtoken");
+  // getCountry,
+  buildErrObject
+  // handleError,
+  // sendRegistrationEmailMessage,
+  // sendResetPasswordEmailMessage
+} = require('./base');
 
 const HOURS_TO_BLOCK = 2;
 const LOGIN_ATTEMPTS = 5;
@@ -35,7 +30,7 @@ const generateToken = user => {
 
 exports.userExists = async (email, username) => {
   return new Promise((resolve, reject) => {
-    models.User.findOne({
+    User.findOne({
       where: {
         $or: [
           {
@@ -53,12 +48,15 @@ exports.userExists = async (email, username) => {
     })
       .then(result => {
         if (result) {
-          let data = {};
-          if (result.email == email) data.email = "EMAIL_ALREADY_EXISTS";
-          if (result.username == username)
-            data.username = "USERNAME_ALREADY_EXISTS";
+          const data = {};
+          if (result.email === email) {
+            data.email = 'EMAIL_ALREADY_EXISTS';
+          }
+          if (result.username === username) {
+            data.username = 'USERNAME_ALREADY_EXISTS';
+          }
 
-          reject(buildErrObject(422, "USER_ALREADY_EXISTS", data || null));
+          reject(buildErrObject(422, 'USER_ALREADY_EXISTS', data || null));
         }
         resolve(false);
       })
@@ -70,7 +68,7 @@ exports.userExists = async (email, username) => {
 
 exports.saveUserAccessAndReturnToken = async (req, user) => {
   return new Promise((resolve, reject) => {
-    models.UserAccess.create({
+    UserAccess.create({
       email: user.email,
       ip: getIP(req),
       browser: getBrowserInfo(req)
@@ -93,14 +91,13 @@ exports.saveUserAccessAndReturnToken = async (req, user) => {
 
 exports.setUserInfo = function(req) {
   const { id, name, email, role, verified } = req;
-  const user = {
+  return {
     id,
     name,
     email,
     role,
     verified
   };
-  return user;
 };
 
 exports.blockUser = async user => {
@@ -111,7 +108,7 @@ exports.blockUser = async user => {
         reject(buildErrObject(422, err.message));
       }
       if (result) {
-        resolve(buildErrObject(409, "BLOCKED_USER"));
+        resolve(buildErrObject(409, 'BLOCKED_USER'));
       }
     });
   });
@@ -172,7 +169,7 @@ exports.checkLoginAttemptsAndBlockExpires = async user => {
 exports.userIsBlocked = async user => {
   return new Promise((resolve, reject) => {
     if (user.blockExpires > new Date()) {
-      reject(buildErrObject(409, "BLOCKED_USER"));
+      reject(buildErrObject(409, 'BLOCKED_USER'));
     }
     resolve(true);
   });
@@ -180,7 +177,7 @@ exports.userIsBlocked = async user => {
 
 exports.findUser = async identity => {
   return new Promise((resolve, reject) => {
-    models.User.findOne({
+    User.findOne({
       where: {
         $or: [
           {
@@ -198,7 +195,7 @@ exports.findUser = async identity => {
     })
       .then(result => {
         if (!result) {
-          reject(buildErrObject(404, "USER_DOES_NOT_EXISTS"));
+          reject(buildErrObject(404, 'USER_DOES_NOT_EXISTS'));
         }
         resolve(result);
       })
@@ -210,28 +207,28 @@ exports.findUser = async identity => {
 
 exports.passwordsDoNotMatch = async user => {
   user.loginAttempts += 1;
-  await saveLoginAttemptsToDB(user);
+  await this.saveLoginAttemptsToDB(user);
   return new Promise((resolve, reject) => {
     if (user.loginAttempts <= LOGIN_ATTEMPTS) {
-      resolve(buildErrObject(409, "WRONG_PASSWORD"));
+      resolve(buildErrObject(409, 'WRONG_PASSWORD'));
     } else {
-      resolve(blockUser(user));
+      resolve(this.blockUser(user));
     }
-    reject(buildErrObject(422, "ERROR"));
+    reject(buildErrObject(422, 'ERROR'));
   });
 };
 
 exports.registerUser = async req => {
   return new Promise((resolve, reject) => {
-    console.log("BODY", req.body);
+    console.log('BODY', req.body);
     const { name, username, email, password } = req.body;
 
-    models.User.create({
+    User.create({
       name,
       username,
       email,
       password,
-      role: "user"
+      role: 'user'
     })
       .then(result => {
         resolve(result);
@@ -252,7 +249,7 @@ exports.returnRegisterToken = (item, userInfo) => {
 
 exports.verificationExists = async id => {
   return new Promise((resolve, reject) => {
-    models.User.findOne({
+    User.findOne({
       where: {
         verification: id,
         verified: false
@@ -260,7 +257,7 @@ exports.verificationExists = async id => {
     })
       .then(result => {
         if (!result) {
-          reject(buildErrObject(404, "NOT_FOUND_OR_ALREADY_VERIFIED"));
+          reject(buildErrObject(404, 'NOT_FOUND_OR_ALREADY_VERIFIED'));
         }
         resolve(result);
       })
@@ -311,7 +308,7 @@ exports.updatePassword = async (password, user) => {
       .save()
       .then(result => {
         if (!result) {
-          reject(buildErrObject(404, "NOT_FOUND"));
+          reject(buildErrObject(404, 'NOT_FOUND'));
         }
         resolve(result);
       })
@@ -323,10 +320,10 @@ exports.updatePassword = async (password, user) => {
 
 exports.findUserToResetPassword = async email => {
   return new Promise((resolve, reject) => {
-    models.User.findOne({ where: { email } })
+    User.findOne({ where: { email } })
       .then(result => {
         if (!result) {
-          reject(buildErrObject(404, "NOT_FOUND"));
+          reject(buildErrObject(404, 'NOT_FOUND'));
         }
         resolve(result);
       })
@@ -383,15 +380,15 @@ exports.findUserToResetPassword = async email => {
 
 const checkPermissions = async (data, next) => {
   return new Promise((resolve, reject) => {
-    models.User.findById(data.id)
+    User.findById(data.id)
       .then(result => {
         if (!result) {
-          reject(buildErrObject(404, "NOT_FOUND"));
+          reject(buildErrObject(404, 'NOT_FOUND'));
         }
         if (data.roles.indexOf(result.role) > -1) {
           return resolve(next());
         }
-        return reject(buildErrObject(401, "UNAUTHORIZED"));
+        return reject(buildErrObject(401, 'UNAUTHORIZED'));
       })
       .catch(err => {
         reject(buildErrObject(422, err.message));

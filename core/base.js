@@ -1,10 +1,10 @@
-const models = require("../db/models");
+const { User } = require('../db/models');
 // const nodemailer = require("nodemailer");
 // const mg = require("nodemailer-mailgun-transport");
-const crypto = require("crypto");
-const algorithm = "aes-256-ecb";
-const password = process.env.JWT_SECRET;
-const requestIp = require("request-ip");
+const crypto = require('crypto');
+const algorithm = 'aes-256-ecb';
+const { jwtSecret } = '../config/app';
+const requestIp = require('request-ip');
 
 const buildSort = (sort, order) => {
   const sortBy = {};
@@ -14,49 +14,49 @@ const buildSort = (sort, order) => {
 
 exports.removeExtensionFromFile = file => {
   return file
-    .split(".")
+    .split('.')
     .slice(0, -1)
-    .join(".")
+    .join('.')
     .toString();
 };
 
 exports.getIP = req => requestIp.getClientIp(req);
 
-exports.getBrowserInfo = req => req.headers["user-agent"];
+exports.getBrowserInfo = req => req.headers['user-agent'];
 
 exports.getCountry = req =>
-  req.headers["cf-ipcountry"] ? req.headers["cf-ipcountry"] : "XX";
+  req.headers['cf-ipcountry'] ? req.headers['cf-ipcountry'] : 'XX';
 
 exports.emailExists = async email => {
   return new Promise((resolve, reject) => {
-    models.User.findOne({
+    User.findOne({
       where: {
         email
       }
     })
       .then(result => {
         if (result) {
-          reject(buildErrObject(422, "EMAIL_ALREADY_EXISTS"));
+          reject(this.buildErrObject(422, 'EMAIL_ALREADY_EXISTS'));
         }
         resolve(false);
       })
       .catch(err => {
-        reject(buildErrObject(422, err.message));
+        reject(this.buildErrObject(422, err.message));
       });
   });
 };
 
 exports.emailExistsExcludingMyself = async (id, email) => {
   return new Promise((resolve, reject) => {
-    models.User.findOne({ where: { email, id } })
+    User.findOne({ where: { email, id } })
       .then(result => {
         if (result) {
-          reject(buildErrObject(422, "EMAIL_ALREADY_EXISTS"));
+          reject(this.buildErrObject(422, 'EMAIL_ALREADY_EXISTS'));
         }
         resolve(false);
       })
       .catch(err => {
-        reject(buildErrObject(422, err.message));
+        reject(this.buildErrObject(422, err.message));
       });
   });
 };
@@ -141,17 +141,17 @@ exports.emailExistsExcludingMyself = async (id, email) => {
 // };
 
 exports.encrypt = text => {
-  const cipher = crypto.createCipher(algorithm, password);
-  let crypted = cipher.update(text, "utf8", "hex");
-  crypted += cipher.final("hex");
+  const cipher = crypto.createCipher(algorithm, jwtSecret);
+  let crypted = cipher.update(text, 'utf8', 'hex');
+  crypted += cipher.final('hex');
   return crypted;
 };
 
 exports.decrypt = text => {
-  const decipher = crypto.createDecipher(algorithm, password);
+  const decipher = crypto.createDecipher(algorithm, jwtSecret);
   try {
-    let dec = decipher.update(text, "hex", "utf8");
-    dec += decipher.final("utf8");
+    let dec = decipher.update(text, 'hex', 'utf8');
+    dec += decipher.final('utf8');
     return dec;
   } catch (err) {
     return err;
@@ -160,7 +160,7 @@ exports.decrypt = text => {
 
 exports.handleError = (res, err) => {
   // Prints error in console
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === 'development') {
     console.log(err);
   }
   // Sends error to user
@@ -187,20 +187,20 @@ exports.isIDGood = async id => {
     const goodID = String(id).match(/^[0-9a-fA-F]{24}$/);
     return goodID
       ? resolve(id)
-      : reject(this.buildErrObject(422, "ID_MALFORMED"));
+      : reject(this.buildErrObject(422, 'ID_MALFORMED'));
   });
 };
 
 exports.checkQueryString = async query => {
   return new Promise((resolve, reject) => {
     try {
-      return typeof query !== "undefined"
+      return typeof query !== 'undefined'
         ? resolve(JSON.parse(query))
         : resolve({});
     } catch (err) {
       console.log(err.message);
       return reject(
-        this.buildErrObject(422, "BAD_FORMAT_FOR_FILTER_USE_JSON_FORMAT")
+        this.buildErrObject(422, 'BAD_FORMAT_FOR_FILTER_USE_JSON_FORMAT')
       );
     }
   });
@@ -208,7 +208,7 @@ exports.checkQueryString = async query => {
 
 exports.listInitOptions = async req => {
   const order = req.query.order || -1;
-  const sort = req.query.sort || "createdAt";
+  const sort = req.query.sort || 'createdAt';
   const sortBy = buildSort(sort, order);
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -225,23 +225,4 @@ exports.listInitOptions = async req => {
 exports.cleanPaginationID = result => {
   result.docs.map(element => delete element.id);
   return result;
-};
-
-exports.hash = (user, salt, next) => {
-  bcrypt.hash(user.password, salt, null, (error, newHash) => {
-    if (error) {
-      return next(error);
-    }
-    user.password = newHash;
-    return next();
-  });
-};
-
-exports.genSalt = (user, SALT_FACTOR, next) => {
-  bcrypt.genSalt(SALT_FACTOR, (err, salt) => {
-    if (err) {
-      return next(err);
-    }
-    return hash(user, salt, next);
-  });
 };
