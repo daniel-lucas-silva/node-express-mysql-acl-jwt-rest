@@ -1,8 +1,16 @@
-import { Router } from 'express';
-import api from './api'
+var router = require("express").Router();
+var acl = require("express-acl");
 
-const router = Router();
+acl.config({
+  filename: "acl.json",
+  path: "config",
+  baseUrl: "/api"
+});
 
-router.use('/api', api);
+router.use(require("./middlewares/jwtMiddleware"));
 
-export default router;
+router.use(acl.authorize);
+
+router.use("/api", require("./controllers"));
+
+module.exports = router;

@@ -10,6 +10,7 @@
     "cors": "^2.8.5",
     "date-fns": "^1.30.1",
     "express": "^4.16.4",
+    "express-acl": "^2.0.5",
     "express-validator": "^5.3.1",
     "helmet": "^3.15.0",
     "jsonwebtoken": "^8.4.0",
@@ -18,21 +19,21 @@
     "nodemon": "^1.18.9",
     "request-ip": "^2.1.3",
     "sequelize": "^4.42.0",
+    "sequelize-paginate": "^1.1.4",
     "trim-request": "^1.0.6",
     "uuid": "^3.3.2"
   },
   "scripts": {
-    "prod": "pm2 start server.js --name \"itaperuna\" --interpreter ./node_modules/.bin/babel-node",
-    "start": "NODE_ENV=development nodemon --exec babel-node -- ./server.js"
+    "prod": "pm2 start server.js --name \"node_rest\"",
+    "start": "NODE_ENV=development nodemon ./server.js",
+    "sequelize": "node_modules/.bin/sequelize"
   },
   "devDependencies": {
-    "@babel/core": "^7.2.2",
-    "@babel/node": "^7.2.2",
-    "@babel/preset-env": "^7.3.1",
     "chai": "^4.2.0",
     "chai-http": "^4.2.1",
     "eslint": "^5.12.1",
     "faker": "^4.1.0",
-    "mocha": "^5.2.0"
+    "mocha": "^5.2.0",
+    "sequelize-cli": "^5.4.0"
   }
 }

@@ -1,8 +1,5 @@
-import jwt from "jsonwebtoken";
-import User from "../models/user";
-import UserAccess from "../models/userAccess";
 // import ForgotPassword from "../models/forgotPassword";
-import {
+const {
   encrypt,
   getIP,
   getBrowserInfo,
@@ -12,11 +9,14 @@ import {
   emailExists,
   sendRegistrationEmailMessage,
   sendResetPasswordEmailMessage
-} from "./base";
-import uuid from "uuid";
-import { addHours } from "date-fns";
-import { matchedData } from "express-validator/filter";
-import { JWT_SECRET, JWT_EXPIRATION } from "../config/config";
+} = require("./base");
+// import uuid from "uuid";
+const { addHours } = require("date-fns");
+// import { matchedData } from "express-validator/filter";
+
+const models = require("../db/models");
+const { jwtSecret, jwtExpiration } = require("../config/app.json");
+const jwt = require("jsonwebtoken");
 
 const HOURS_TO_BLOCK = 2;
 const LOGIN_ATTEMPTS = 5;
@@ -30,33 +30,55 @@ const generateToken = user => {
   //     expiresIn: process.env.JWT_EXPIRATION
   //   })
   // );
-  return jwt.sign(obj, JWT_SECRET, {
-    expiresIn: JWT_EXPIRATION
+  return jwt.sign(obj, jwtSecret, { expiresIn: jwtExpiration });
+};
+
+exports.userExists = async (email, username) => {
+  return new Promise((resolve, reject) => {
+    models.User.findOne({
+      where: {
+        $or: [
+          {
+            email: {
+              $eq: email
+            }
+          },
+          {
+            username: {
+              $eq: username
+            }
+          }
+        ]
+      }
+    })
+      .then(result => {
+        if (result) {
+          let data = {};
+          if (result.email == email) data.email = "EMAIL_ALREADY_EXISTS";
+          if (result.username == username)
+            data.username = "USERNAME_ALREADY_EXISTS";
+
+          reject(buildErrObject(422, "USER_ALREADY_EXISTS", data || null));
+        }
+        resolve(false);
+      })
+      .catch(err => {
+        reject(buildErrObject(422, err.message));
+      });
   });
 };
 
-const setUserInfo = req => {
-  const { id, name, email, role, verified } = req;
-  const user = {
-    id,
-    name,
-    email,
-    role,
-    verified
-  };
-  return user;
-};
-
-const saveUserAccessAndReturnToken = async (req, user) => {
+exports.saveUserAccessAndReturnToken = async (req, user) => {
   return new Promise((resolve, reject) => {
-    UserAccess.create({
+    models.UserAccess.create({
       email: user.email,
       ip: getIP(req),
-      browser: getBrowserInfo(req),
-      country: getCountry(req)
+      browser: getBrowserInfo(req)
+      // country: getCountry(req)
     })
       .then(result => {
-        const userInfo = setUserInfo(user);
+        console.log(user.id);
+        const userInfo = this.setUserInfo(user);
         // Returns data with access token
         resolve({
           token: generateToken(user.id),
@@ -69,7 +91,19 @@ const saveUserAccessAndReturnToken = async (req, user) => {
   });
 };
 
-const blockUser = async user => {
+exports.setUserInfo = function(req) {
+  const { id, name, email, role, verified } = req;
+  const user = {
+    id,
+    name,
+    email,
+    role,
+    verified
+  };
+  return user;
+};
+
+exports.blockUser = async user => {
   return new Promise((resolve, reject) => {
     user.blockExpires = addHours(new Date(), HOURS_TO_BLOCK);
     user.save((err, result) => {
@@ -83,7 +117,7 @@ const blockUser = async user => {
   });
 };
 
-const saveLoginAttemptsToDB = async user => {
+exports.saveLoginAttemptsToDB = async user => {
   return new Promise((resolve, reject) => {
     user
       .save()
@@ -98,7 +132,7 @@ const saveLoginAttemptsToDB = async user => {
   });
 };
 
-const checkPassword = async (password, user) => {
+exports.checkPassword = async (password, user) => {
   return new Promise((resolve, reject) => {
     user.comparePassword(password, (err, isMatch) => {
       if (err) {
@@ -115,7 +149,7 @@ const checkPassword = async (password, user) => {
 const blockIsExpired = ({ loginAttempts, blockExpires }) =>
   loginAttempts > LOGIN_ATTEMPTS && blockExpires <= new Date();
 
-const checkLoginAttemptsAndBlockExpires = async user => {
+exports.checkLoginAttemptsAndBlockExpires = async user => {
   return new Promise((resolve, reject) => {
     // Let user try to login again after blockexpires, resets user loginAttempts
     if (blockIsExpired(user)) {
@@ -135,7 +169,7 @@ const checkLoginAttemptsAndBlockExpires = async user => {
   });
 };
 
-const userIsBlocked = async user => {
+exports.userIsBlocked = async user => {
   return new Promise((resolve, reject) => {
     if (user.blockExpires > new Date()) {
       reject(buildErrObject(409, "BLOCKED_USER"));
@@ -144,9 +178,24 @@ const userIsBlocked = async user => {
   });
 };
 
-const findUser = async email => {
+exports.findUser = async identity => {
   return new Promise((resolve, reject) => {
-    User.findOne({ where: { email } })
+    models.User.findOne({
+      where: {
+        $or: [
+          {
+            email: {
+              $eq: identity
+            }
+          },
+          {
+            username: {
+              $eq: identity
+            }
+          }
+        ]
+      }
+    })
       .then(result => {
         if (!result) {
           reject(buildErrObject(404, "USER_DOES_NOT_EXISTS"));
@@ -159,7 +208,7 @@ const findUser = async email => {
   });
 };
 
-const passwordsDoNotMatch = async user => {
+exports.passwordsDoNotMatch = async user => {
   user.loginAttempts += 1;
   await saveLoginAttemptsToDB(user);
   return new Promise((resolve, reject) => {
@@ -172,11 +221,12 @@ const passwordsDoNotMatch = async user => {
   });
 };
 
-const registerUser = async req => {
+exports.registerUser = async req => {
   return new Promise((resolve, reject) => {
+    console.log("BODY", req.body);
     const { name, username, email, password } = req.body;
 
-    User.create({
+    models.User.create({
       name,
       username,
       email,
@@ -184,7 +234,6 @@ const registerUser = async req => {
       role: "user"
     })
       .then(result => {
-        console.log("AQUIII");
         resolve(result);
       })
       .catch(err => {
@@ -193,17 +242,17 @@ const registerUser = async req => {
   });
 };
 
-const returnRegisterToken = (item, userInfo) => {
+exports.returnRegisterToken = (item, userInfo) => {
   userInfo.verification = item.verification;
   return {
-    token: generateToken(item._id),
+    token: generateToken(item.id),
     user: userInfo
   };
 };
 
-const verificationExists = async id => {
+exports.verificationExists = async id => {
   return new Promise((resolve, reject) => {
-    User.findOne({
+    models.User.findOne({
       where: {
         verification: id,
         verified: false
@@ -221,7 +270,7 @@ const verificationExists = async id => {
   });
 };
 
-const verifyUser = async user => {
+exports.verifyUser = async user => {
   return new Promise((resolve, reject) => {
     user.verified = true;
     user
@@ -235,7 +284,7 @@ const verifyUser = async user => {
   });
 };
 
-// const markResetPasswordAsUsed = async (req, forgot) => {
+// exports.markResetPasswordAsUsed = async (req, forgot) => {
 //   return new Promise((resolve, reject) => {
 //     forgot.used = true;
 //     forgot.ipChanged = getIP(req);
@@ -255,7 +304,7 @@ const verifyUser = async user => {
 //   });
 // };
 
-const updatePassword = async (password, user) => {
+exports.updatePassword = async (password, user) => {
   return new Promise((resolve, reject) => {
     user.password = password;
     user
@@ -272,9 +321,9 @@ const updatePassword = async (password, user) => {
   });
 };
 
-const findUserToResetPassword = async email => {
+exports.findUserToResetPassword = async email => {
   return new Promise((resolve, reject) => {
-    User.findOne({ where: { email } })
+    models.User.findOne({ where: { email } })
       .then(result => {
         if (!result) {
           reject(buildErrObject(404, "NOT_FOUND"));
@@ -287,7 +336,7 @@ const findUserToResetPassword = async email => {
   });
 };
 
-// const findForgotPassword = async id => {
+// exports.findForgotPassword = async id => {
 //   return new Promise((resolve, reject) => {
 //     ForgotPassword.findOne(
 //       {
@@ -307,7 +356,7 @@ const findUserToResetPassword = async email => {
 //   });
 // };
 
-// const saveForgotPassword = async req => {
+// exports.saveForgotPassword = async req => {
 //   return new Promise((resolve, reject) => {
 //     const forgot = new ForgotPassword({
 //       email: req.body.email,
@@ -334,7 +383,7 @@ const findUserToResetPassword = async email => {
 
 const checkPermissions = async (data, next) => {
   return new Promise((resolve, reject) => {
-    User.findById(data.id)
+    models.User.findById(data.id)
       .then(result => {
         if (!result) {
           reject(buildErrObject(404, "NOT_FOUND"));
@@ -348,29 +397,4 @@ const checkPermissions = async (data, next) => {
         reject(buildErrObject(422, err.message));
       });
   });
-};
-
-export {
-  generateToken,
-  setUserInfo,
-  saveUserAccessAndReturnToken,
-  blockUser,
-  saveLoginAttemptsToDB,
-  checkPassword,
-  blockIsExpired,
-  checkLoginAttemptsAndBlockExpires,
-  userIsBlocked,
-  findUser,
-  passwordsDoNotMatch,
-  registerUser,
-  returnRegisterToken,
-  verificationExists,
-  verifyUser,
-  // markResetPasswordAsUsed,
-  updatePassword,
-  findUserToResetPassword,
-  // findForgotPassword,
-  // saveForgotPassword,
-  // forgotPasswordResponse,
-  checkPermissions
 };

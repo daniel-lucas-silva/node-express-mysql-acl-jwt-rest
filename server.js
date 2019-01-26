@@ -1,20 +1,18 @@
-import express from "express";
-import bodyParser from "body-parser";
-import morgan from "morgan";
-import compression from "compression";
-import helmet from "helmet";
-import cors from "cors";
-import passport from "passport";
+const express = require("express");
+const bodyParser = require("body-parser");
+const morgan = require("morgan");
+const compression = require("compression");
+const helmet = require("helmet");
+const cors = require("cors");
 
-// import routes from './app/routes';
-import routes from "./routes";
-import database from "./config/database";
+const routes = require("./routes");
 
 const app = express();
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
+
 app.use(
   bodyParser.json({
     limit: "20mb"
@@ -27,9 +25,9 @@ app.use(
   })
 ); /* for parsing application/x-www-form-urlencoded ~*/
 app.use(cors());
-app.use(passport.initialize());
 app.use(compression());
 app.use(helmet());
+
 // Redis cache enabled only for production
 if (process.env.NODE_ENV === "production") {
   // app.use(cache);
@@ -37,17 +35,6 @@ if (process.env.NODE_ENV === "production") {
 app.use(express.static("public"));
 app.use(routes);
 
-// Place.belongsTo(User, { constraints: true, onDelete: 'CASCADE'});
-// User.hasMany(Product);
+app.listen(8080);
 
-database
-  .sync()
-  .then(result => {
-    // console.log(result);
-    app.listen(3000);
-  })
-  .catch(err => {
-    console.log(err);
-  });
-
-export default app; // for testing
+module.exports = app; // for testing

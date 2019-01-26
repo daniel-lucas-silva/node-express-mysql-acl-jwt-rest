@@ -1,0 +1,17 @@
+[
+  {
+    "group": "guest",
+    "permissions": [
+      { "resource": "auth/*", "methods": "*", "action": "allow" },
+      { "resource": "*", "methods": "*", "action": "deny" }
+    ]
+  },
+  {
+    "group": "admin",
+    "permissions": [{ "resource": "*", "methods": "*", "action": "allow" }]
+  },
+  {
+    "group": "user",
+    "permissions": [{ "resource": "admin", "methods": "*", "action": "deny" }]
+  }
+]
