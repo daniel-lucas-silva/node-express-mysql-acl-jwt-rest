@@ -3,7 +3,7 @@ const { User } = require('../db/models');
 // const mg = require("nodemailer-mailgun-transport");
 const crypto = require('crypto');
 const algorithm = 'aes-256-ecb';
-const { jwtSecret } = '../config/app';
+const { jwtSecret } = require('../config/app');
 const requestIp = require('request-ip');
 
 const buildSort = (sort, order) => {
@@ -59,6 +59,16 @@ exports.emailExistsExcludingMyself = async (id, email) => {
         reject(this.buildErrObject(422, err.message));
       });
   });
+};
+
+exports.acl = role => {
+  return (req, res, next) => {
+    const roles = role instanceof String ? Array.of(role) : role;
+    if (!roles.includes(req.decoded.role)) {
+      return this.handleError(res, this.buildErrObject(401, 'UNAUTHORIZED'));
+    }
+    next();
+  };
 };
 
 // exports.sendEmail = async (data, callback) => {
@@ -141,14 +151,19 @@ exports.emailExistsExcludingMyself = async (id, email) => {
 // };
 
 exports.encrypt = text => {
-  const cipher = crypto.createCipher(algorithm, jwtSecret);
+  console.log(jwtSecret);
+  const cipher = crypto.createCipheriv(algorithm, Buffer.from(jwtSecret), null);
   let crypted = cipher.update(text, 'utf8', 'hex');
   crypted += cipher.final('hex');
   return crypted;
 };
 
 exports.decrypt = text => {
-  const decipher = crypto.createDecipher(algorithm, jwtSecret);
+  const decipher = crypto.createDecipheriv(
+    algorithm,
+    Buffer.from(jwtSecret),
+    null
+  );
   try {
     let dec = decipher.update(text, 'hex', 'utf8');
     dec += decipher.final('utf8');

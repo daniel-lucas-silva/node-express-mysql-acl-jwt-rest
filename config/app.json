@@ -1,6 +1,6 @@
 {
   "port": 3000,
-  "jwtSecret": "i_see_dead_people",
+  "jwtSecret": "d41d8cd98f00b204e9800998ecf8427e",
   "jwtExpiration": "100d",
   "baseUrl": "http://localhost"
 }

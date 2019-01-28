@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const app = require('../../config/app.json');
 const router = require('express').Router();
+const { decrypt } = require('../../core/base');
+const { User } = require('../../db/models');
 
 router.use((req, res, next) => {
   let token = req.headers.authorization;
@@ -11,12 +13,16 @@ router.use((req, res, next) => {
     return next();
   }
 
-  return jwt.verify(token, app.jwtSecret, (err, decoded) => {
+  return jwt.verify(decrypt(token), app.jwtSecret, async (err, decoded) => {
     if (err) {
       return res.send(err);
     }
 
-    req.decoded = decoded;
+    await User.findById(decoded.id).then(result => {
+      const { role } = result;
+      req.decoded = { role };
+    });
+
     return next();
   });
 });

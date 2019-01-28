@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { handleError } = require('../../core/base');
+const { handleError, acl } = require('../../core/base');
 const {
   userExists,
   findUser,
@@ -28,13 +28,13 @@ router
   /**
    * Auth current user
    */
-  .get('/', (req, res, next) => {
+  .get('/', acl('guest'), (req, res, next) => {
     res.send({ me: 'me' });
   })
   /**
    * Login
    */
-  .post('/login', async (req, res) => {
+  .post('/login', acl('guest'), async (req, res) => {
     try {
       const { identity, password } = req.body;
       const user = await findUser(identity);
@@ -56,7 +56,7 @@ router
   /**
    * Register
    */
-  .post('/register', async (req, res) => {
+  .post('/register', acl('guest'), async (req, res) => {
     try {
       const { email, username } = req.body;
       const doesUserExists = await userExists(email, username);
@@ -74,7 +74,7 @@ router
   /**
    * Verify
    */
-  .post('/verify', async (req, res) => {
+  .post('/verify', acl('guest'), async (req, res) => {
     try {
       const user = await verificationExists(req.body.id);
       res.status(200).json(await verifyUser(user));
@@ -85,7 +85,7 @@ router
   /**
    * Forgot password
    */
-  .post('/forgot', async (req, res) => {
+  .post('/forgot', acl('guest'), async (req, res) => {
     try {
       await findUser(req.body.email);
       const item = await saveForgotPassword(req);
@@ -98,7 +98,7 @@ router
   /**
    * Reset password
    */
-  .post('/reset', async (req, res) => {
+  .post('/reset', acl('guest'), async (req, res) => {
     try {
       const forgotPassword = await findForgotPassword(req.body.id);
       const user = await findUserToResetPassword(forgotPassword.email);

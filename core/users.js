@@ -3,7 +3,7 @@ const { User, UserAccess } = require('../db/models');
 const { jwtSecret, jwtExpiration } = require('../config/app.json');
 const jwt = require('jsonwebtoken');
 const {
-  // encrypt,
+  encrypt,
   getIP,
   getBrowserInfo,
   // getCountry,
@@ -20,12 +20,8 @@ const generateToken = user => {
   const obj = {
     id: user
   };
-  // return encrypt(
-  //   jwt.sign(obj, process.env.JWT_SECRET, {
-  //     expiresIn: process.env.JWT_EXPIRATION
-  //   })
-  // );
-  return jwt.sign(obj, jwtSecret, { expiresIn: jwtExpiration });
+  return encrypt(jwt.sign(obj, jwtSecret, { expiresIn: jwtExpiration }));
+  // return jwt.sign(obj, jwtSecret, { expiresIn: jwtExpiration });
 };
 
 exports.userExists = async (email, username) => {
