@@ -1,11 +1,11 @@
-"use strict";
+'use strict';
 
-const bcrypt = require("bcrypt-nodejs");
-const uuid = require("uuid/v1");
+const bcrypt = require('bcrypt-nodejs');
+const uuid = require('uuid/v1');
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(
-    "User",
+    'User',
     {
       username: DataTypes.STRING,
       email: DataTypes.STRING,
@@ -25,8 +25,8 @@ module.exports = (sequelize, DataTypes) => {
       hooks: {
         beforeCreate: async user => {
           user.id = uuid();
-          await bcrypt.genSalt(5, function(err, salt) {
-            bcrypt.hash(user.password, salt, null, function(err, hash) {
+          await bcrypt.genSalt(5, (err, salt) => {
+            bcrypt.hash(user.password, salt, null, (err, hash) => {
               user.password = hash;
               // Promise.resolve(user);
             });
@@ -54,7 +54,8 @@ module.exports = (sequelize, DataTypes) => {
   };
 
   User.associate = function(models) {
-    // associations can be defined here
+    User.hasMany(models.Post);
   };
+
   return User;
 };

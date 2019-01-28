@@ -1,7 +1,8 @@
-"use strict";
+'use strict';
+
 module.exports = (sequelize, DataTypes) => {
   const UserAccess = sequelize.define(
-    "UserAccess",
+    'UserAccess',
     {
       email: DataTypes.STRING,
       ip: DataTypes.STRING,
