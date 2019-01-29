@@ -90,7 +90,7 @@ exports.get = async id => {
 };
 
 exports.update = async (id, req) => {
-  const { title, content, thumbnail } = req.body;
+  const { title, content, thumbnail, categoryId } = req.body;
   return new Promise(
     (resolve, reject) => {
       Post.findById(id)
@@ -111,6 +111,7 @@ exports.update = async (id, req) => {
             result.title = title;
             result.content = content;
             result.thumbnail = thumbnail;
+            result.categoryId = categoryId;
             result.save();
             resolve({
               code: 200,
@@ -140,18 +141,15 @@ exports.update = async (id, req) => {
 };
 
 exports.create = async req => {
-  const {
-    title,
-    content,
-    thumbnail
-  } = req.body;
+  const { title, content, thumbnail, categoryId } = req.body;
   return new Promise(
     (resolve, reject) => {
       Post.create({
         title,
         content,
         thumbnail,
-        userId: req.decoded.id
+        userId: req.decoded.id,
+        categoryId
       })
         .then(result => {
           if(result) {

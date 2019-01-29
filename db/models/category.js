@@ -6,9 +6,30 @@ module.exports = (sequelize, DataTypes) => {
   const Category = sequelize.define(
     'Category',
     {
-      title: DataTypes.STRING,
-      description: DataTypes.TEXT,
-      thumbnail: DataTypes.STRING
+      title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: {
+            msg: 'Required field!'
+          }
+        }
+      },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        validate: {
+          notEmpty: {
+            msg: 'Required field!'
+          }
+        }
+      },
+      thumbnail: {
+        type: DataTypes.STRING,
+        validate: {
+          isUrl: true
+        }
+      }
     },
     {}
   );
