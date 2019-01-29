@@ -1,5 +1,7 @@
 'use strict';
 
+const sequelizePaginate = require('sequelize-paginate');
+
 module.exports = (sequelize, DataTypes) => {
   const Category = sequelize.define(
     'Category',
@@ -13,5 +15,8 @@ module.exports = (sequelize, DataTypes) => {
   Category.associate = function(models) {
     Category.hasMany(models.Post);
   };
+
+  sequelizePaginate.paginate(Category);
+
   return Category;
 };

@@ -25,6 +25,16 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
+    })
+    .then(function() {
+      return queryInterface.addIndex(
+        'Categories', 
+        ['title', 'description'],
+        {
+          indexName: 'categorySearch',
+          indicesType: 'FULLTEXT'
+        }
+      );
     });
   },
   down: (queryInterface, Sequelize) => {

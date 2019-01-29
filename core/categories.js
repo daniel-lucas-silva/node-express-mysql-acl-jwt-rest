@@ -1,4 +1,4 @@
-const { Post } = require('../db/models');
+const { Category } = require('../db/models');
 const Sequelize = require('sequelize');
 
 exports.fetch = async (req, query) => {
@@ -14,10 +14,8 @@ exports.fetch = async (req, query) => {
     attributes: [
       'id', 
       'title', 
-      'content', 
-      'thumbnail', 
-      'userId', 
-      'categoryId', 
+      'description', 
+      'thumbnail',
       'createdAt'
     ],
     page: parseInt(page), // Default 1
@@ -27,18 +25,14 @@ exports.fetch = async (req, query) => {
   };
 
   if(search) {
-    const term = search
-      .toLowerCase()
-      .replace(/[^\w ]+/g,'')
-      .replace(/ +/g,'**');
-    options.attributes.push([Sequelize.literal(`MATCH (title, content) AGAINST ('*${term}*' IN BOOLEAN MODE)`), 'relevance']);
+    options.attributes.push([Sequelize.literal(`MATCH (title, description) AGAINST ('*${search}*' IN BOOLEAN MODE)`), 'relevance']);
     options.order.unshift([Sequelize.literal('relevance'), 'DESC']);
-    options.where = Sequelize.literal(`MATCH (title, content) AGAINST ('*${term}*' IN BOOLEAN MODE)`);
+    options.where = Sequelize.literal(`MATCH (title, description) AGAINST ('*${search}*' IN BOOLEAN MODE)`);
   }
   
   return new Promise(
     async (resolve, reject) => {
-      await Post.paginate(options)
+      await Category.paginate(options)
         .then(result => {
           if(result.docs.length < -1) {
             resolve({
@@ -65,7 +59,7 @@ exports.fetch = async (req, query) => {
 exports.get = async id => {
   return new Promise(
     (resolve, reject) => {
-      Post.findById(id)
+      Category.findById(id)
         .then(result => {
           if (!result) {
             reject({
@@ -90,10 +84,10 @@ exports.get = async id => {
 };
 
 exports.update = async (id, req) => {
-  const { title, content, thumbnail } = req.body;
+  const { title, description, thumbnail } = req.body;
   return new Promise(
     (resolve, reject) => {
-      Post.findById(id)
+      Category.findById(id)
         .then(result => {
           if(!result) {
             reject({
@@ -101,15 +95,9 @@ exports.update = async (id, req) => {
               message: 'NOT_FOUND'
             });
           }
-          else if(result.userId !== req.decoded.id) {
-            reject({
-              code: 403,
-              message: 'FORBIDDEN'
-            });
-          }
           else {
             result.title = title;
-            result.content = content;
+            result.description = description;
             result.thumbnail = thumbnail;
             result.save();
             resolve({
@@ -142,16 +130,15 @@ exports.update = async (id, req) => {
 exports.create = async req => {
   const {
     title,
-    content,
+    description,
     thumbnail
   } = req.body;
   return new Promise(
     (resolve, reject) => {
-      Post.create({
+      Category.create({
         title,
-        content,
+        description,
         thumbnail,
-        userId: req.decoded.id
       })
         .then(result => {
           if(result) {
@@ -183,21 +170,15 @@ exports.create = async req => {
 };
 
 exports.delete = async (id, req) => {
-  const { title, content, thumbnail } = req.body;
+  const { title, description, thumbnail } = req.body;
   return new Promise(
     (resolve, reject) => {
-      Post.findById(id)
+      Category.findById(id)
         .then(result => {
           if(!result) {
             reject({
               code: 404,
               message: 'NOT_FOUND'
-            });
-          }
-          else if(result.userId !== req.decoded.id) {
-            reject({
-              code: 403,
-              message: 'FORBIDDEN'
             });
           }
           else {

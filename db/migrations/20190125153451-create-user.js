@@ -34,6 +34,16 @@ module.exports = {
       loginAttempts: { type: Sequelize.INTEGER },
       createdAt: { allowNull: false, type: Sequelize.DATE },
       updatedAt: { allowNull: true, type: Sequelize.DATE }
+    })
+    .then(function() {
+      return queryInterface.addIndex(
+        'Users', 
+        ['username', 'email'],
+        {
+          indexName: 'userSearch',
+          indicesType: 'FULLTEXT'
+        }
+      );
     });
   },
   down: (queryInterface, Sequelize) => {

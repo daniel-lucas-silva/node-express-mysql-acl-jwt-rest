@@ -2,14 +2,42 @@
 
 const bcrypt = require('bcrypt-nodejs');
 const uuid = require('uuid/v1');
+const sequelizePaginate = require('sequelize-paginate');
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(
     'User',
     {
-      username: DataTypes.STRING,
-      email: DataTypes.STRING,
-      password: DataTypes.STRING,
+      username: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: {
+            msg: 'Required field!'
+          }
+        }
+      },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          isEmail: {
+            msg: 'Valid email required!'
+          },
+          notEmpty: {
+            msg: 'Required field!'
+          }
+        }
+      },
+      password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: {
+            msg: 'Required field!'
+          }
+        }
+      },
       thumbnail: DataTypes.STRING,
       info: DataTypes.JSON,
       role: DataTypes.STRING,
@@ -56,6 +84,8 @@ module.exports = (sequelize, DataTypes) => {
   User.associate = function(models) {
     User.hasMany(models.Post);
   };
+
+  sequelizePaginate.paginate(User);
 
   return User;
 };
