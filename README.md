@@ -1,7 +1,7 @@
 Node.js express.js MySQL JWT ACL FULLTEXT Search REST API
 ====================
 
-[![Author](http://img.shields.io/badge/author-@davellanedam-blue.svg?style=flat-square)](https://facebook.com/dluuk)
+[![Author](http://img.shields.io/badge/author-@daniel-lucas-silva-blue.svg?style=flat-square)](https://facebook.com/dluuk)
 
 ## How to install
 
