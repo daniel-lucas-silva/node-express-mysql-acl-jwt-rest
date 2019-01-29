@@ -11,12 +11,26 @@ exports.fetch = async (req, query) => {
   } = query;
 
   const options = {
-    attributes: ['id', 'title', 'content', 'thumbnail', 'userId', 'categoryId', 'createdAt'],
+    attributes: [
+      'id', 
+      'title', 
+      'content', 
+      'thumbnail', 
+      'userId', 
+      'categoryId', 
+      'createdAt'
+    ],
     page: parseInt(page), // Default 1
     paginate: parseInt(limit), // Default 25
     order: [[sort, order]],
-    where: search && Sequelize.literal(`MATCH (title, content) AGAINST ('*${search}*' IN BOOLEAN MODE)`)
+    // where: []
   };
+
+  if(search) {
+    options.attributes.push([Sequelize.literal(`MATCH (title, content) AGAINST ('*${search}*' IN BOOLEAN MODE)`), 'relevance']);
+    options.order.unshift([Sequelize.literal('relevance'), 'DESC']);
+    options.where = Sequelize.literal(`MATCH (title, content) AGAINST ('*${search}*' IN BOOLEAN MODE)`);
+  }
   
   return new Promise(
     async (resolve, reject) => {
