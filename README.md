@@ -22,6 +22,12 @@ npm install nodemon -g
 ```
 ## How to run
 
+### Database seed 
+
+- `npm run sequelize db:seed:all`
+email: admin@admin.com
+password: 12345678 
+
 ### Database migration 
 
 - `npm run sequelize db:migrate`
