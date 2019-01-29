@@ -181,6 +181,7 @@ exports.handleError = (res, err) => {
   // Sends error to user
   res.status(err.code).json({
     errors: {
+      code: err.code,
       message: err.message,
       data: err.data
     }

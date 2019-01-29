@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const trimRequest = require('trim-request');
+const url = require('url');
 
 const {
   handleError,
@@ -8,72 +9,85 @@ const {
 const posts = require('../../core/posts');
 
 router
+  /**
+   * Fetch posts with pagination and fulltext search
+   * ?search=[TEXT]&limit=[INTEGER]&page=[INTEGER]&sort=[COLUMN]&order=[DESC|ASC]
+   */
   .get('/', async (req, res, next) => {
     try {
-      var url = require('url');
-      var { query } = url.parse(req.url, true);
-      
+      const { query } = url.parse(req.url, true);
+      const results = await posts.fetch(req, query);
+
       res
         .status(200)
-        .json(
-          await posts.fetch(req, query)
-        );
+        .json(results);
     } catch (error) {
       handleError(res, error);
     }
   })
+  /**
+   * Create post
+   */
   .post('/', acl(['user', 'admin']), trimRequest.all, async (req, res, next) => {
       try {
-        const result = await posts.create(
-          req
-        );
-        res.status(201).json(result);
+        const result = await posts.create(req);
+
+        res
+          .status(201)
+          .json(result);
       } catch (error) {
         handleError(res, error);
       }
     }
   )
+  /**
+   * Get a single post
+   */
   .get( '/:id', async (req, res, next) => {
       try {
+        const result = await posts.get(req.params.id);
+
         res
           .status(200)
-          .json(
-            await posts.get(
-              req.params.id
-            )
-          );
+          .json(result);
       } catch (error) {
-        return res
-          .status(422)
-          .json({ error });
+        handleError(res, error);
       }
     }
   )
+  /**
+   * Update post
+   */
   .patch('/:id', acl(['user', 'admin']), trimRequest.all, async (req, res, next) => {
       try {
         const result = await posts.update(
           req.params.id,
           req
         );
-        res.status(201).json(result);
+
+        res
+          .status(201)
+          .json(result);
       } catch (error) {
-        return res
-          .status(422)
-          .json({ error });
+        handleError(res, error);
       }
     }
   )
+  /**
+   * Delete post
+   */
   .delete('/:id', acl(['user', 'admin']), async (req, res, next) => {
       try {
         const result = await posts.delete(
           req.params.id,
           req
         );
-        res.status(201).json(result);
+
+        res
+          .status(201)
+          .json(result);
       } catch (error) {
-        return res
-          .status(422)
-          .json({ error });
+        handleError(res, error);
       }
     }
   );
