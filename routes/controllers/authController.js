@@ -44,7 +44,6 @@ router
       if (!isPasswordMatch) {
         handleError(res, await passwordsDoNotMatch(user));
       } else {
-        // all ok, register access and return token
         user.loginAttempts = 0;
         await saveLoginAttemptsToDB(user);
         res.status(200).json(await saveUserAccessAndReturnToken(req, user));
@@ -70,44 +69,44 @@ router
     } catch (error) {
       handleError(res, error);
     }
-  })
-  /**
-   * Verify
-   */
-  .post('/verify', acl('guest'), async (req, res) => {
-    try {
-      const user = await verificationExists(req.body.id);
-      res.status(200).json(await verifyUser(user));
-    } catch (error) {
-      handleError(res, error);
-    }
-  })
-  /**
-   * Forgot password
-   */
-  .post('/forgot', acl('guest'), async (req, res) => {
-    try {
-      await findUser(req.body.email);
-      const item = await saveForgotPassword(req);
-      sendResetPasswordEmailMessage(item);
-      res.status(200).json(forgotPasswordResponse(item));
-    } catch (error) {
-      handleError(res, error);
-    }
-  })
-  /**
-   * Reset password
-   */
-  .post('/reset', acl('guest'), async (req, res) => {
-    try {
-      const forgotPassword = await findForgotPassword(req.body.id);
-      const user = await findUserToResetPassword(forgotPassword.email);
-      await updatePassword(data.password, user);
-      const result = await markResetPasswordAsUsed(req, forgotPassword);
-      res.status(200).json(result);
-    } catch (error) {
-      handleError(res, error);
-    }
   });
+/**
+ * Verify
+ */
+// .post('/verify', acl('guest'), async (req, res) => {
+//   try {
+//     const user = await verificationExists(req.body.id);
+//     res.status(200).json(await verifyUser(user));
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// })
+/**
+ * Forgot password
+ */
+// .post('/forgot', acl('guest'), async (req, res) => {
+//   try {
+//     await findUser(req.body.email);
+//     const item = await saveForgotPassword(req);
+//     sendResetPasswordEmailMessage(item);
+//     res.status(200).json(forgotPasswordResponse(item));
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// })
+/**
+ * Reset password
+ */
+// .post('/reset', acl('guest'), async (req, res) => {
+//   try {
+//     const forgotPassword = await findForgotPassword(req.body.id);
+//     const user = await findUserToResetPassword(forgotPassword.email);
+//     await updatePassword(data.password, user);
+//     const result = await markResetPasswordAsUsed(req, forgotPassword);
+//     res.status(200).json(result);
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// });
 
 module.exports = router;

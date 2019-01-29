@@ -2,6 +2,6 @@
   "20190125153451-create-user.js",
   "20190125163851-create-user-access.js",
   "20190128180403-create-category.js",
-  "20190128180445-create-post.js",
-  "20190128181726-add_category_to_post.js"
+  "20190128181726-add_category_to_post.js",
+  "20190128180445-create-post.js"
 ]

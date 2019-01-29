@@ -19,8 +19,8 @@ router.use((req, res, next) => {
     }
 
     await User.findById(decoded.id).then(result => {
-      const { role } = result;
-      req.decoded = { role };
+      const { id, role } = result;
+      req.decoded = { id, role };
     });
 
     return next();

@@ -1,12 +1,35 @@
 'use strict';
 
+const sequelizePaginate = require('sequelize-paginate');
+
 module.exports = (sequelize, DataTypes) => {
   const Post = sequelize.define(
     'Post',
     {
-      title: DataTypes.STRING,
-      content: DataTypes.TEXT,
-      thumbnail: DataTypes.STRING,
+      title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: {
+            msg: 'Required field!'
+          }
+        }
+      },
+      content: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        validate: {
+          notEmpty: {
+            msg: 'Required field!'
+          }
+        }
+      },
+      thumbnail: {
+        type: DataTypes.STRING,
+        validate: {
+          isUrl: true
+        }
+      },
       userId: DataTypes.UUIDV1,
       categoryId: DataTypes.INTEGER
     },
@@ -15,5 +38,8 @@ module.exports = (sequelize, DataTypes) => {
   Post.associate = function(models) {
     Post.belongsTo(models.User);
   };
+
+  sequelizePaginate.paginate(Post);
+
   return Post;
 };

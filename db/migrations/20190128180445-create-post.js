@@ -20,6 +20,9 @@ module.exports = {
       userId: {
         type: Sequelize.UUID
       },
+      categoryId: {
+        type: Sequelize.INTEGER
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -28,6 +31,16 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
+    })
+    .then(function() {
+      return queryInterface.addIndex(
+        'Posts', 
+        ['title', 'content'],
+        {
+          indexName: 'postSearch',
+          indicesType: 'FULLTEXT'
+        }
+      );
     });
   },
   down: (queryInterface, Sequelize) => {
